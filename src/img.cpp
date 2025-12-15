@@ -22,14 +22,24 @@ int parse_digit(std::FILE* fp){
   return std::stoi(buf);
 }
 
-PPMPixel parse_pixel(std::FILE* fp){
+PPMPixel parse_pixel_binary(std::FILE* fp){
   auto r = static_cast<uint16_t>(std::fgetc(fp));
   auto g = static_cast<uint16_t>(std::fgetc(fp));
   auto b = static_cast<uint16_t>(std::fgetc(fp)); 
   return {r,g,b};
 }
 
-PPMPixel parse_wide_pixel(std::FILE* fp){
+PPMPixel parse_pixel_ascii(std::FILE* fp){
+  consume_whitespace(fp);
+  auto r = static_cast<uint16_t>(parse_digit(fp));
+  consume_whitespace(fp);
+  auto g = static_cast<uint16_t>(parse_digit(fp));
+  consume_whitespace(fp);
+  auto b = static_cast<uint16_t>(parse_digit(fp)); 
+  return {r,g,b};
+}
+
+PPMPixel parse_pixel_binary_wide(std::FILE* fp){
   uint16_t v = 0;
   // place most significant bits into lower part
   v = std::fgetc(fp);
@@ -48,7 +58,11 @@ PPMPixel parse_wide_pixel(std::FILE* fp){
   auto b = v; 
   return {r,g,b};
 }
-  
+
+PPMPixel parse_pixel_ascii_wide(std::FILE* fp){
+  // TODO: Implement
+  return {0,0,0};
+}
 
 /*
 From the ppm documentation at https://netpbm.sourceforge.net/doc/ppm.html :
@@ -71,9 +85,10 @@ PPMImage PPMImage::from_file(std::FILE* fp) {
   buf.push_back(fgetc(fp));
   buf.push_back(fgetc(fp));
   // TODO: Support P1 (grayscale) and P3 (non-binary fmt)
-  if (buf != "P6") {
+  if (buf != "P6" && buf != "P3") {
     throw std::invalid_argument("Invalid file format for parsing into PPM");
   }
+  PPMPixel (*parse_pixel)(std::FILE*);
   // 1. Skip whitespace
   consume_whitespace(fp);
   // 2. Parse image dimensions
@@ -85,14 +100,26 @@ PPMImage PPMImage::from_file(std::FILE* fp) {
   consume_whitespace(fp);
   // 3. allocate space for image
   img.pixels = std::vector<PPMPixel>(img.width * img.height);
+  // Select pixel parsing function (Horrendous if-statement, I know)
+  // Yeye polymorphism bla bla use an interface etc... fix it later
+  if (buf == "P6") {
+    if (img.color_depth < 256) {
+      parse_pixel = &parse_pixel_binary;
+    } else {
+      parse_pixel = &parse_pixel_binary_wide;
+    }
+  }
+  else {
+    if (img.color_depth < 256) {
+      parse_pixel = &parse_pixel_ascii;
+    } else {
+      parse_pixel = &parse_pixel_ascii_wide;
+    }
+  }
   // 4. Parse height rows of width pixels
   for(int i = 0; i < img.height; i++){
     for(int j = 0; j < img.width; j++){
-      if (img.color_depth < 256) {
 	img.pixels[i*img.width + j] = parse_pixel(fp);
-      } else{
-	img.pixels[i*img.width + j] = parse_wide_pixel(fp);
-      }
     }
   }
   return img;

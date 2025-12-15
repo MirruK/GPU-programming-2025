@@ -10,7 +10,8 @@ CXXFLAGS = -Wall -g
 TARGET = main
 
 # Source files
-SRCS = src/main.cpp src/img.cpp src/img.hpp
+SRCS = src/main.cpp src/img.cpp
+HEADERS = src/img.hpp
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)
@@ -28,4 +29,4 @@ $(TARGET): $(OBJS)
 
 # Clean rule to remove generated files
 clean:
-	del $(TARGET_DEL) $(OBJS)
+	rm $(TARGET) $(OBJS)
