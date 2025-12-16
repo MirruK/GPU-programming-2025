@@ -2,6 +2,7 @@
 #include <vector>
 #include <cstdio>
 #include <cstdint>
+#include <algorithm>
 
 // PPM File format documentation at: https://netpbm.sourceforge.net/doc/ppm.html
 

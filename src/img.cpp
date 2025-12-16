@@ -4,9 +4,9 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <algorithm>
 
 PPMImage::PPMImage(){}
-
 
 void consume_whitespace(std::FILE* fp) {
   char c;
