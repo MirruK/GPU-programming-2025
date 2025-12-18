@@ -5,7 +5,20 @@
 
 ### Architecture overview
 
-When the main function is ran, the following steps are taken:
+- img.hpp/img.cpp
+  - Image parsing and writing
+  - Image related structs and classes
+- img-utils.cuh
+  - Cuda header file with needed declarations for the kernel and setup code
+- setup.cu
+  - Setup code for the GPU (mallocs and memcpys)
+  - Reading input file (this should be done somewhere else ideally)
+  - Writing output file (this should be done somewhere else ideally)
+- blur-kernel.cu
+  - The most unoptimized convolution kernel implementation
+  - Right now uses a FILTER_SIZE*FILTER_SIZE blur filter
+
+### TODO: Review this architecture and implement
 
 1. Parse cmd-args
 2. create or read input image(s)
@@ -20,10 +33,14 @@ When the main function is ran, the following steps are taken:
 
 ## How to run
 
-Use the Makefile provided by running: `make`
+Use the Makefile provided by running: `make all`
 
 This builds the binary, you can then run it using:
-`./shader -s SHADER_NAME -f FILENAME... -d DIRNAME`
+`cat input.ppm | ./build/main`
+
+The output is right now a file called output.ppm (which is overwritten every run)
+
+TODO: Is this how we want it? `./main -s SHADER_NAME -f FILENAME... -d DIRNAME`
 
 The outputs will be placed either in the output directory specified by the -d flag,
 or into the current directory with the filenames of the outupts in the format output-NNN.ppm
