@@ -137,9 +137,9 @@ void PPMImage::to_file(std::FILE* fp) {
     for(int j = 0; j < width; j++){
       if (color_depth < 256) {
 	px = pixels[i*width + j];
-	fputc(static_cast<unsigned char>(px.r),fp);
-	fputc(static_cast<unsigned char>(px.g),fp);
-	fputc(static_cast<unsigned char>(px.b),fp);
+	fputc(static_cast<uint8_t>(px.r),fp);
+	fputc(static_cast<uint8_t>(px.g),fp);
+	fputc(static_cast<uint8_t>(px.b),fp);
       } else{
 	px = pixels[i*width + j];
 	fputc(px.r >> 8,fp);
