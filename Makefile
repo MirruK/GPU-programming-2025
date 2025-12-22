@@ -14,7 +14,7 @@ TARGET = $(BUILD_DIR)/main
 # Source files
 SRCS = src/main.cpp src/img.cpp
 HEADERS = src/img.hpp
-CU_SRCS = src/setup.cu src/blur-kernel.cu #src/main.cu
+CU_SRCS = src/setup.cu src/convolution-kernel.cu #src/main.cu
 
 # Object files
 OBJS := $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.cpp=.o)))

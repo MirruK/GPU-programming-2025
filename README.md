@@ -36,9 +36,11 @@
 Use the Makefile provided by running: `make all`
 
 This builds the binary, you can then run it using:
-`cat input.ppm | ./build/main`
+`cat input.ppm | ./build/main OUTFILE_NAME.ppm`
 
-The output is right now a file called output.ppm (which is overwritten every run)
+The output is written to either the specified OUTFILE_NAME.ppm, or output.ppm if nothing else is provided.
+
+
 
 TODO: Is this how we want it? `./main -s SHADER_NAME -f FILENAME... -d DIRNAME`
 

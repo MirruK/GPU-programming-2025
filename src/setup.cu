@@ -1,8 +1,26 @@
 #include <cstdio>
+#include <string>
 #include "img.hpp"
 #include "img-utils.cuh"
 
-void run_blur_kernel_test(){
+void init_blur_filter(float filter[FILTER_SIZE][FILTER_SIZE]) {
+  for(int i = 0; i < FILTER_SIZE; i++) {
+    for(int j = 0; j < FILTER_SIZE; j++) {
+      filter[i][j] = 1.0f/((float)(FILTER_SIZE*FILTER_SIZE));
+    }
+  }
+}
+
+void init_sharpen_filter(float filter[3][3]) {
+  float temp[3][3] = {{0,-1,0},{-1,5,-1}, {0,-1,0}};
+  for(int i = 0; i < 3; i++) {
+    for(int j = 0; j < 3; j++) {
+      filter[i][j] = temp[i][j];
+    }
+  }
+}
+
+void run_convolution_kernel_test(std::string outfile){
   printf("Running kernel test\n");
   FILE* in_fp = stdin;
   // Allocate image on host
@@ -28,25 +46,22 @@ void run_blur_kernel_test(){
   cudaMalloc((void**)&px_in_d, w*h*sizeof(PPMPixel));
   cudaMalloc((void**)&px_out_d, w*h*sizeof(PPMPixel));
   // memcopy into device
-  float blur_filter_host[FILTER_SIZE][FILTER_SIZE];
-  for(int i = 0; i < FILTER_SIZE; i++) {
-    for(int j = 0; j < FILTER_SIZE; j++) {
-      blur_filter_host[i][j] = 1.0f/((float)(FILTER_SIZE*FILTER_SIZE));
-    }
-  }
+  float filter_host[FILTER_SIZE][FILTER_SIZE];
+  //init_blur_filter(filter_host);
+  init_sharpen_filter(filter_host);
   printf("Blur filter: w: %d, h: %d\n Contents:\n", FILTER_SIZE, FILTER_SIZE);
   for(int i = 0; i < FILTER_SIZE; i++) {
     for(int j = 0; j < FILTER_SIZE; j++) {
-      printf("%f, ", blur_filter_host[i][j]);
+      printf("%f, ", filter_host[i][j]);
     }
     printf("\n");
   }
-  cudaError_t cuda_error = set_blur_filter(blur_filter_host);
+  cudaError_t cuda_error = set_filter(filter_host);
   if (cuda_error != cudaSuccess) {
       printf("MemcpyToSymbol failed: %s\n", cudaGetErrorString(cuda_error));
   }
   cudaMemcpy(px_in_d, in_pixels_h, w*h*sizeof(PPMPixel), cudaMemcpyHostToDevice);
-  blur_image_GPU(px_in_d, px_out_d, w, h, color_depth);
+  convolve_image_GPU(px_in_d, px_out_d, w, h, color_depth);
   cuda_error = cudaDeviceSynchronize();
   if(cuda_error != cudaSuccess){
     printf("Error when running kernel: %s\n", cudaGetErrorString(cuda_error));
@@ -54,7 +69,13 @@ void run_blur_kernel_test(){
 
   printf("Reading back GPU results...\n");
   cudaMemcpy(out_pixels_h, px_out_d, w * h * sizeof(PPMPixel), cudaMemcpyDeviceToHost);
-  FILE* out = fopen("output.ppm", "wb");
+  FILE* out;
+  if (outfile.length() > 0) {
+    out = fopen(outfile.c_str(), "wb");
+  } else {
+    out = fopen("output.ppm", "wb");
+  }
   out_img.to_file(out);
   fclose(out);
 }
+

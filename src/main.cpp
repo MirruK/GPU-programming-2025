@@ -1,18 +1,11 @@
 #include "img.hpp"
 #include <cstdio>
+#include <string>
 
-void run_blur_kernel_test();
+void run_convolution_kernel_test(std::string outfile);
 
-int main () {
- //  FILE* f = stdin;
- //  auto img = PPMImage::from_file(f);
- //  std::printf("Width: %d\nHeight: %d\nColor Depth: %d\n;;;;;;;;\n", img.width, img.height, img.color_depth);
- // // for(auto px : img.pixels){
- // //   std::printf("px: {%d,%d,%d} ", px.r, px.g, px.b);
- // // }
- //  FILE* out = fopen("output.ppm", "wb");
- //  img.to_file(out);
- //  fclose(out);
- //  return 0;
-  run_blur_kernel_test();
+int main (int argc, char* argv[]) {
+  std::string outfile = "";
+  if (argc > 1) {outfile = std::string(argv[1]);}
+  run_convolution_kernel_test(outfile);
 }
