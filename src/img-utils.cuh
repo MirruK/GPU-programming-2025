@@ -4,9 +4,17 @@
 #define FILTER_SIZE 3
 #define FILTER_RADIUS 1
 
-cudaError_t set_filter(const float h_filter[FILTER_SIZE][FILTER_SIZE]);
+cudaError_t set_blur_filter(const float h_filter[FILTER_SIZE][FILTER_SIZE]);
 
 void convolve_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth);
+
+enum BlurType {
+  BLUR_BOX,
+  BLUR_GAUSSIAN,
+  BLUR_MOTION
+};
+
+void select_blur_filter(BlurType type);
 
 __host__ __device__
 inline uint16_t clamping_add(uint16_t v1, uint16_t v2, uint16_t color_depth) {

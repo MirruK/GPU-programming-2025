@@ -20,11 +20,10 @@ void init_sharpen_filter(float filter[3][3]) {
   }
 }
 
-void run_convolution_kernel_test(std::string outfile){
+void run_blur_kernel_test(std::string outfile, BlurType blur_type){
   printf("Running kernel test\n");
   FILE* in_fp = stdin;
   // Allocate image on host
-  // TODO: Take this information from cmdline args (allow either stdin or file(s))
   auto img = PPMImage::from_file(in_fp);
   fclose(in_fp);
   int w = img.width;
@@ -37,8 +36,7 @@ void run_convolution_kernel_test(std::string outfile){
   out_img.width = w;
   out_img.height = h;
   out_img.color_depth = color_depth;
-  out_img.pixels = std::vector<PPMPixel>();
-  out_img.pixels.reserve(w*h);
+  out_img.pixels = std::vector<PPMPixel>(w*n);
   PPMPixel* out_pixels_h = out_img.pixels.data();
   // Allocate device vars
   PPMPixel *px_in_d;
@@ -47,23 +45,15 @@ void run_convolution_kernel_test(std::string outfile){
   cudaMalloc((void**)&px_out_d, w*h*sizeof(PPMPixel));
   // memcopy into device
   float filter_host[FILTER_SIZE][FILTER_SIZE];
-  //init_blur_filter(filter_host);
-  init_sharpen_filter(filter_host);
-  printf("Blur filter: w: %d, h: %d\n Contents:\n", FILTER_SIZE, FILTER_SIZE);
-  for(int i = 0; i < FILTER_SIZE; i++) {
-    for(int j = 0; j < FILTER_SIZE; j++) {
-      printf("%f, ", filter_host[i][j]);
-    }
-    printf("\n");
-  }
-  cudaError_t cuda_error = set_filter(filter_host);
+  // Select the blur filter type and check for errors
+  select_blur_filter(blur_type);
+  // Copy input image to device
+  cudaMemcpy(px_in_d, in_pixels_h, w * h * sizeof(PPMPixel), cudaMemcpyHostToDevice);
+
+  // Run kernel
+  blur_image_GPU(px_in_d, px_out_d, w, h, color_depth);
+  cudaError_t cuda_error = cudaDeviceSynchronize();
   if (cuda_error != cudaSuccess) {
-      printf("MemcpyToSymbol failed: %s\n", cudaGetErrorString(cuda_error));
-  }
-  cudaMemcpy(px_in_d, in_pixels_h, w*h*sizeof(PPMPixel), cudaMemcpyHostToDevice);
-  convolve_image_GPU(px_in_d, px_out_d, w, h, color_depth);
-  cuda_error = cudaDeviceSynchronize();
-  if(cuda_error != cudaSuccess){
     printf("Error when running kernel: %s\n", cudaGetErrorString(cuda_error));
   }
 
@@ -77,5 +67,9 @@ void run_convolution_kernel_test(std::string outfile){
   }
   out_img.to_file(out);
   fclose(out);
+
+  // free device memory
+  cudaFree(px_in_d);
+  cudaFree(px_out_d);
 }
 
