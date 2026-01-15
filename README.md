@@ -14,7 +14,7 @@
   - Setup code for the GPU (mallocs and memcpys)
   - Reading input file (this should be done somewhere else ideally)
   - Writing output file (this should be done somewhere else ideally)
-- blur-kernel.cu
+- convolution-kernel.cu
   - The most unoptimized convolution kernel implementation
   - Right now uses a FILTER_SIZE*FILTER_SIZE blur filter
 
@@ -36,7 +36,7 @@
 Use the Makefile provided by running: `make all`
 
 This builds the binary, you can then run it using:
-`cat input.ppm | ./build/main OUTFILE_NAME.ppm`
+`cat INPUT_FILENAME.ppm | ./build/main [box | gauss | motion] [OUTPUT_FILENAME.ppm]`
 
 The output is written to either the specified OUTFILE_NAME.ppm, or output.ppm if nothing else is provided.
 
