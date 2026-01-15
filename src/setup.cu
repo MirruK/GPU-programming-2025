@@ -62,6 +62,7 @@ void run_convolution_kernel_test(std::string outfile){
   }
   cudaMemcpy(px_in_d, in_pixels_h, w*h*sizeof(PPMPixel), cudaMemcpyHostToDevice);
   convolve_image_GPU(px_in_d, px_out_d, w, h, color_depth);
+
   cuda_error = cudaDeviceSynchronize();
   if(cuda_error != cudaSuccess){
     printf("Error when running kernel: %s\n", cudaGetErrorString(cuda_error));
