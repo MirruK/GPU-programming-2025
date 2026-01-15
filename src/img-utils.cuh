@@ -1,18 +1,13 @@
 #pragma once
 #include "img.hpp"
+#include "common.hpp"
 #include <cstdint>
 #define FILTER_SIZE 3
 #define FILTER_RADIUS 1
 
 cudaError_t set_blur_filter(const float h_filter[FILTER_SIZE][FILTER_SIZE]);
 
-void convolve_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth);
-
-enum BlurType {
-  BLUR_BOX,
-  BLUR_GAUSSIAN,
-  BLUR_MOTION
-};
+void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth);
 
 void select_blur_filter(BlurType type);
 

@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <string>
+#include "common.hpp"
 #include "img.hpp"
 #include "img-utils.cuh"
 
@@ -36,15 +37,13 @@ void run_blur_kernel_test(std::string outfile, BlurType blur_type){
   out_img.width = w;
   out_img.height = h;
   out_img.color_depth = color_depth;
-  out_img.pixels = std::vector<PPMPixel>(w*n);
+  out_img.pixels = std::vector<PPMPixel>(w*h);
   PPMPixel* out_pixels_h = out_img.pixels.data();
   // Allocate device vars
   PPMPixel *px_in_d;
   PPMPixel *px_out_d;
   cudaMalloc((void**)&px_in_d, w*h*sizeof(PPMPixel));
   cudaMalloc((void**)&px_out_d, w*h*sizeof(PPMPixel));
-  // memcopy into device
-  float filter_host[FILTER_SIZE][FILTER_SIZE];
   // Select the blur filter type and check for errors
   select_blur_filter(blur_type);
   // Copy input image to device

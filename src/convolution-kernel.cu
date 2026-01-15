@@ -1,3 +1,4 @@
+#include "common.hpp"
 #include "img-utils.cuh"
 #include <cmath>
 
@@ -113,19 +114,19 @@ void init_box_filter()
 
 void select_blur_filter(BlurType type) {
   switch (type) {
-    case BLUR_BOX:
+    case BlurType::BLUR_BOX:
       init_box_filter();
       break;
-    case BLUR_GAUSSIAN:
+    case BlurType::BLUR_GAUSSIAN:
       init_gaussian_filter(1.0f);
       break;
-    case BLUR_MOTION:
+    case BlurType::BLUR_MOTION:
       init_motion_filter_horizontal();
       break;
   }
 }
 
-void convolve_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth) {
+void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth) {
     dim3 threads(20,20);
     dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
 
