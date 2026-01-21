@@ -15,13 +15,15 @@ int main(int argc, char** argv) {
             blur = BlurType::BLUR_GAUSSIAN;
         } else if (strcmp(argv[1], "motion") == 0) {
             blur = BlurType::BLUR_MOTION;
+        } else if (strcmp(argv[1], "sobel") == 0) {
+            blur = BlurType::BLUR_SOBEL;
         } else {
-            printf("Unknown blur type '%s'. Use: box | gauss | motion\n", argv[1]);
+            printf("Unknown blur type '%s'. Use: box | gauss | motion | sobel\n", argv[1]);
             return 1;
         }
     } else {
         printf("No blur type given, defaulting to 'box'.\n");
-        printf("Usage: %s [box|gauss|motion] < input.ppm\n", argv[0]);
+        printf("Usage: %s [box|gauss|motion|sobel] < input.ppm\n", argv[0]);
     }
     if(argc == 3) {
         outfile = std::string(argv[2]);

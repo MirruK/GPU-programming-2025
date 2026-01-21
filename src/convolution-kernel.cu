@@ -97,6 +97,56 @@ __global__ void convolution_kernel(PPMPixel* img_d, PPMPixel* img_out_d, int w, 
   img_out_d[row*w + col] = px;
 }
 
+// needed for sobel 
+// need negative values for edge detection
+// only grayscale so only one channel needed
+// no clamping untill final magnitude calculation
+__global__ void convolution_raw_kernel(PPMPixel* img_d, float* out_d,  int w, int h) {
+  int col = blockDim.x * blockIdx.x + threadIdx.x;
+  int row = blockDim.y * blockIdx.y + threadIdx.y;
+  if (col >= w || row >= h) return; 
+
+  float sum = 0.0f;
+  for(int i = -FILTER_RADIUS; i <= FILTER_RADIUS; i++){
+    for(int j = -FILTER_RADIUS; j <= FILTER_RADIUS; j++){
+      int x = col + j;
+      int y = row + i;
+
+
+      if ((x >= 0) && (x < w) && (y >= 0) && (y < h)){
+        float intensity = img_d[y * w + x].r; 
+        sum += intensity * filter[i + FILTER_RADIUS][j + FILTER_RADIUS];
+      }
+    }
+  }
+  out_d[row * w + col] = sum;
+}
+
+__global__ void sobel_magnitude_kernel(
+    float* gx_d,
+    float* gy_d,
+    PPMPixel* out_d,
+    int w, int h,
+    int color_depth)
+{
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (col >= w || row >= h) return;
+
+    float gx = gx_d[row * w + col];
+    float gy = gy_d[row * w + col];
+
+    float mag = sqrtf(gx * gx + gy * gy);
+    int val = min(color_depth, (int)(mag + 0.5f));
+
+    PPMPixel px;
+    px.r = px.g = px.b = val;
+    out_d[row * w + col] = px;
+}
+
+
+
 // Round a / b to nearest higher integer value
 // Courtesy of: https://github.com/NVIDIA/cuda-samples
 inline int int_div_rnd_up(int a, int b) { return (a % b != 0) ? (a / b + 1) : (a / b); }
@@ -173,6 +223,37 @@ void init_box_filter()
   }
 }
 
+
+void init_sobel_x_filter()
+{
+  float h_filter[FILTER_SIZE][FILTER_SIZE] = {
+      {-1, 0, 1},
+      {-2, 0, 2},
+      {-1, 0, 1}
+  };
+
+  cudaError_t err = set_blur_filter(h_filter);
+  if (err != cudaSuccess) {
+    fprintf(stderr, "Failed to set Sobel X filter: %s\n",
+            cudaGetErrorString(err));
+  }
+}
+
+void init_sobel_y_filter()
+{
+  float h_filter[FILTER_SIZE][FILTER_SIZE] = {
+      { 1,  2,  1},
+      { 0,  0,  0},
+      {-1, -2, -1}
+  };
+
+  cudaError_t err = set_blur_filter(h_filter);
+  if (err != cudaSuccess) {
+    fprintf(stderr, "Failed to set Sobel Y filter: %s\n",
+            cudaGetErrorString(err));
+  }
+}
+
 void select_blur_filter(BlurType type) {
   switch (type) {
     case BlurType::BLUR_BOX:
@@ -201,3 +282,25 @@ void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int 
 //
 //  convolution_kernel<<<blocks, threads>>>(src_img_d, dst_img_d, w, h, color_depth);
 //}
+// sobel explained https://www.youtube.com/watch?v=uihBwtPIBxM
+
+// TODO sobel orienation color coded?
+void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* grayscale_d, float* gx_d, float* gy_d, int w, int h, int color_depth) {
+    dim3 threads(20,20);
+    dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
+    
+    // make grayscale first
+    grayscale_image_GPU(src_img_d, grayscale_d, w, h, color_depth);
+
+    // x filter
+    init_sobel_x_filter();
+    convolution_raw_kernel<<<blocks, threads>>>(grayscale_d, gx_d, w, h);
+    
+    // y filter
+    init_sobel_y_filter();
+    convolution_raw_kernel<<<blocks, threads>>>(grayscale_d, gy_d, w, h);
+   
+    // Combine gradients
+    sobel_magnitude_kernel<<<blocks, threads>>>(gx_d, gy_d, dst_img_d, w, h, color_depth);
+    
+  }

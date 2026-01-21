@@ -50,11 +50,42 @@ void run_blur_kernel_test(std::string outfile, BlurType blur_type){
   cudaMemcpy(px_in_d, in_pixels_h, w * h * sizeof(PPMPixel), cudaMemcpyHostToDevice);
 
   // Run kernel
-  blur_image_GPU(px_in_d, px_out_d, w, h, color_depth);
-  cudaError_t cuda_error = cudaDeviceSynchronize();
-  if (cuda_error != cudaSuccess) {
-    printf("Error when running kernel: %s\n", cudaGetErrorString(cuda_error));
-  }
+  // TODO FIX LOGIC SO NO DUPLICATE CODE -HEKTO
+  if (blur_type == BlurType::BLUR_SOBEL){
+    PPMPixel* grayscale_d;
+    float* gx_d;
+    float* gy_d;
+    cudaMalloc((void**)&grayscale_d, w*h*sizeof(PPMPixel));
+    cudaMalloc((void**)&gx_d, w*h*sizeof(float));
+    cudaMalloc((void**)&gy_d, w*h*sizeof(float));
+
+    cudaError_t cuda_error = cudaDeviceSynchronize();
+    if (cuda_error != cudaSuccess) {
+      printf("Error when running SOBEL kernel: %s\n", cudaGetErrorString(cuda_error));
+    }
+    sobel_image_GPU(px_in_d, px_out_d, grayscale_d, gx_d, gy_d, w, h, color_depth);
+
+    cudaFree(grayscale_d);
+    cudaFree(gx_d);
+    cudaFree(gy_d);
+
+    cudaMemcpy(out_pixels_h, px_out_d, w * h * sizeof(PPMPixel), cudaMemcpyDeviceToHost);
+    FILE* out;
+    if (outfile.length() > 0) {
+      out = fopen(outfile.c_str(), "wb");
+    } else {
+      out = fopen("output.ppm", "wb");
+    }
+    out_img.to_file(out);
+    fclose(out);
+
+
+  } else {
+    blur_image_GPU(px_in_d, px_out_d, w, h, color_depth);
+    cudaError_t cuda_error = cudaDeviceSynchronize();
+    if (cuda_error != cudaSuccess) {
+      printf("Error when running kernel: %s\n", cudaGetErrorString(cuda_error));
+    }
 
   printf("Reading back GPU results...\n");
   cudaMemcpy(out_pixels_h, px_out_d, w * h * sizeof(PPMPixel), cudaMemcpyDeviceToHost);
@@ -70,5 +101,6 @@ void run_blur_kernel_test(std::string outfile, BlurType blur_type){
   // free device memory
   cudaFree(px_in_d);
   cudaFree(px_out_d);
+}
 }
 
