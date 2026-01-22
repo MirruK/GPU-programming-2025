@@ -1,6 +1,9 @@
 #include "common.hpp"
 #include "img-utils.cuh"
 #include <cmath>
+#define TILE_SIZE 16
+#define R FILTER_RADIUS
+#define BLOCK_SIZE (TILE_SIZE + 2*R)
 
 __constant__ float filter[FILTER_SIZE][FILTER_SIZE];
 
@@ -8,11 +11,69 @@ cudaError_t set_blur_filter(const float h_filter[FILTER_SIZE][FILTER_SIZE]) {
     return cudaMemcpyToSymbol(filter, h_filter, FILTER_SIZE*FILTER_SIZE*sizeof(float));
 }
 
+__device__ __forceinline__ int clampi(int x, int lo, int hi) {
+  return max(lo, min(hi, x));
+}
+
+__global__ void convolution_tiled_rgb_u16(
+    const PPMPixel* __restrict__ N,  // input image (w*h)
+    PPMPixel* __restrict__ P,        // output image (w*h)
+    int w, int h, int color_depth)
+{
+  int tx = threadIdx.x; // 0..BLOCK_SIZE-1
+  int ty = threadIdx.y; // 0..BLOCK_SIZE-1
+
+  // Output pixel coords
+  int row_o = blockIdx.y * TILE_SIZE + ty;
+  int col_o = blockIdx.x * TILE_SIZE + tx;
+
+  // Input coords for shared tile
+  int row_i = row_o - R;
+  int col_i = col_o - R;
+
+  // Shared tile with halo
+  __shared__ ushort4 tile[BLOCK_SIZE][BLOCK_SIZE];
+
+  // Load one shared element per thread
+  if (row_i >= 0 && row_i < h && col_i >= 0 && col_i < w) {
+    PPMPixel p = N[row_i * w + col_i];
+    tile[ty][tx] = make_ushort4(p.r, p.g, p.b, 0);
+  } else {
+    tile[ty][tx] = make_ushort4(0, 0, 0, 0);
+  }
+
+  __syncthreads();
+
+  // Only the TILE_SIZE x TILE_SIZE 'inner' threads compute/write output
+  if (ty < TILE_SIZE && tx < TILE_SIZE && row_o < h && col_o < w) {
+    float accR = 0.f, accG = 0.f, accB = 0.f;
+
+    #pragma unroll
+    for (int i = 0; i < FILTER_SIZE; i++) {
+      #pragma unroll
+      for (int j = 0; j < FILTER_SIZE; j++) {
+        ushort4 q = tile[ty + i][tx + j];
+        float wgt = filter[i][j];
+        accR += (float)q.x * wgt;
+        accG += (float)q.y * wgt;
+        accB += (float)q.z * wgt;
+      }
+    }
+
+    PPMPixel out;
+    out.r = (uint16_t)max(0, min(color_depth, (int)(accR + 0.5f)));
+    out.g = (uint16_t)max(0, min(color_depth, (int)(accG + 0.5f)));
+    out.b = (uint16_t)max(0, min(color_depth, (int)(accB + 0.5f)));
+
+    P[row_o * w + col_o] = out;
+  }
+}
+
 __global__ void convolution_kernel(PPMPixel* img_d, PPMPixel* img_out_d, int w, int h, int color_depth) {
   int col = blockDim.x * blockIdx.x + threadIdx.x;
   int row = blockDim.y * blockIdx.y + threadIdx.y;
 
-  if (col >= w || row >= h) return; 
+  if (col >= w || row >= h) return;
   float3 acc = {0.0f,0.0f,0.0f};
   PPMPixel px = {0,0,0};
   for(int i = -FILTER_RADIUS; i <= FILTER_RADIUS; i++){
@@ -30,9 +91,9 @@ __global__ void convolution_kernel(PPMPixel* img_d, PPMPixel* img_out_d, int w, 
       }
     }
   }
-  px.r = min(color_depth, (int)(acc.x + 0.5f)); 
-  px.g = min(color_depth, (int)(acc.y + 0.5f)); 
-  px.b = min(color_depth, (int)(acc.z + 0.5f)); 
+  px.r = min(color_depth, (int)(acc.x + 0.5f));
+  px.g = min(color_depth, (int)(acc.y + 0.5f));
+  px.b = min(color_depth, (int)(acc.z + 0.5f));
   img_out_d[row*w + col] = px;
 }
 
@@ -127,8 +188,16 @@ void select_blur_filter(BlurType type) {
 }
 
 void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth) {
-    dim3 threads(20,20);
-    dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
+  dim3 block(BLOCK_SIZE, BLOCK_SIZE);
+  dim3 grid((w + TILE_SIZE - 1) / TILE_SIZE,
+            (h + TILE_SIZE - 1) / TILE_SIZE);
 
-    convolution_kernel<<<blocks, threads>>>(src_img_d, dst_img_d, w, h, color_depth);
+  convolution_tiled_rgb_u16<<<grid, block>>>(src_img_d, dst_img_d, w, h, color_depth);
 }
+
+//void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth) {
+//  dim3 threads(20,20);
+//  dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
+//
+//  convolution_kernel<<<blocks, threads>>>(src_img_d, dst_img_d, w, h, color_depth);
+//}
