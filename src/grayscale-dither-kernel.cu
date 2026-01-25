@@ -61,14 +61,6 @@ inline __device__ float bayer_threshold(int x, int y) {
     return ((float)bayer[y & (BAYER_N - 1)][x & (BAYER_N - 1)] + 0.5f) / (BAYER_N * BAYER_N);
 }
 
-inline __device__ float srgb_to_linear(float x) {
-    return (x <= 0.04045f) ? (x / 12.92f) : powf((x + 0.055f) / 1.055f, 2.4f);
-}
-
-inline __device__ float linear_to_srgb(float x) {
-    return (x <= 0.0031308f) ? (12.92f * x) : (1.055f * powf(x, 1.0f / 2.4f) - 0.055f);
-}
-
 __global__ void grayscale_dither_kernel(const PPMPixel* img_d, PPMPixel* img_out_d, int w, int h, int color_depth, int levels) {
     int col = blockDim.x * blockIdx.x + threadIdx.x;
     int row = blockDim.y * blockIdx.y + threadIdx.y;
