@@ -1,11 +1,14 @@
 #pragma once
 #include <string>
 
-enum class BlurType {
+enum class ShaderType{
   BLUR_BOX,
   BLUR_GAUSSIAN,
   BLUR_MOTION,
-  BLUR_SOBEL
+  BLUR_SOBEL,
+  DITHER,
+  GRAYSCALE
 };
 
-void run_blur_kernel_test(std::string outfile, BlurType blur_type);
+// Kernel runner (defined in setup.cu)
+void run_kernel(std::string outfile, ShaderType shader_type);

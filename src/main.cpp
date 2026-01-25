@@ -5,30 +5,34 @@
 
 
 int main(int argc, char** argv) {
-    BlurType blur = BlurType::BLUR_BOX;
+    ShaderType shader = ShaderType::BLUR_BOX;
     std::string outfile = "";
 
     if (argc >= 2) {
         if (strcmp(argv[1], "box") == 0) {
-            blur = BlurType::BLUR_BOX;
+            shader = ShaderType::BLUR_BOX;
         } else if (strcmp(argv[1], "gauss") == 0 || strcmp(argv[1], "gaussian") == 0) {
-            blur = BlurType::BLUR_GAUSSIAN;
+            shader = ShaderType::BLUR_GAUSSIAN;
         } else if (strcmp(argv[1], "motion") == 0) {
-            blur = BlurType::BLUR_MOTION;
+            shader = ShaderType::BLUR_MOTION;
+        } else if (strcmp(argv[1], "dither") == 0) {
+            shader = ShaderType::DITHER;
+        } else if (strcmp(argv[1], "grayscale") == 0) {
+            shader = ShaderType::GRAYSCALE;
         } else if (strcmp(argv[1], "sobel") == 0) {
-            blur = BlurType::BLUR_SOBEL;
+            shader = ShaderType::BLUR_SOBEL;
         } else {
-            printf("Unknown blur type '%s'. Use: box | gauss | motion | sobel\n", argv[1]);
+            printf("Unknown shader '%s'. Use: box | gauss | motion | dither | grayscale | sobel\n", argv[1]);
             return 1;
         }
     } else {
-        printf("No blur type given, defaulting to 'box'.\n");
-        printf("Usage: %s [box|gauss|motion|sobel] < input.ppm\n", argv[0]);
+        printf("No shader type given, defaulting to 'box'.\n");
+        printf("Usage: %s [box|gauss|motion|dither|grayscale|sobel] < input.ppm\n", argv[0]);
     }
     if(argc == 3) {
         outfile = std::string(argv[2]);
     }
 
-    run_blur_kernel_test(outfile, blur);
+    run_kernel(outfile, shader);
     return 0;
 }

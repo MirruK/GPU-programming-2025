@@ -9,11 +9,9 @@ cudaError_t set_blur_filter(const float h_filter[FILTER_SIZE][FILTER_SIZE]);
 
 void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth);
 
-void grayscale_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth);
-
 void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* grayscale_d, float* gx_d, float* gy_d, int w, int h, int color_depth);
 
-void select_blur_filter(BlurType type);
+void select_blur_filter(ShaderType type);
 
 void grayscale_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, float* mask, int w, int h, int color_depth);
 void grayscale_dither_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth, int levels);

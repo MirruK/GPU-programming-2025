@@ -254,15 +254,16 @@ void init_sobel_y_filter()
   }
 }
 
-void select_blur_filter(BlurType type) {
+
+void select_blur_filter(ShaderType type) {
   switch (type) {
-    case BlurType::BLUR_BOX:
+    case ShaderType::BLUR_BOX:
       init_box_filter();
       break;
-    case BlurType::BLUR_GAUSSIAN:
+    case ShaderType::BLUR_GAUSSIAN:
       init_gaussian_filter(1.0f);
       break;
-    case BlurType::BLUR_MOTION:
+    case ShaderType::BLUR_MOTION:
       init_motion_filter_horizontal();
       break;
   }
@@ -288,9 +289,10 @@ void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int 
 void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* grayscale_d, float* gx_d, float* gy_d, int w, int h, int color_depth) {
     dim3 threads(20,20);
     dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
+    float* mask = nullptr;
     
     // make grayscale first
-    grayscale_image_GPU(src_img_d, grayscale_d, w, h, color_depth);
+    grayscale_image_GPU(src_img_d, grayscale_d, mask, w, h, color_depth);
 
     // x filter
     init_sobel_x_filter();
