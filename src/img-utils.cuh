@@ -1,5 +1,6 @@
 #pragma once
 #include "img.hpp"
+#include "common.hpp"
 #include <cstdint>
 #define FILTER_SIZE 3
 #define FILTER_RADIUS 1
