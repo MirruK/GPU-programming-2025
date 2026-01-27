@@ -2,7 +2,17 @@
 #include <cuda_runtime.h>
 #include "img-utils.cuh"
 
-#define BAYER_N 16 // set to 4, 8, or 16
+#define BAYER_N 8 // set to 4, 8, or 16
+
+/*
+The size of the Bayer threshold matrix affects the output image in a subtle way.
+The larger it is, the better it smooths out edges and the closer it gets
+to the intended luminance values. However, smaller matrices will sometimes retain
+more detail. An 8 x 8 matrix seems to be a good middle ground between retaining
+detail and smoothing out edges. The matrix sizes we can use are limited to
+powers of two because we use a bitwise hack to calculate modulo efficiently in
+the bayer_threshold() function.
+*/
 
 #if BAYER_N == 4 
 
@@ -68,17 +78,24 @@ __global__ void grayscale_dither_kernel(const PPMPixel* img_d, PPMPixel* img_out
 
     PPMPixel px = img_d[row * w + col];
 
-    // Luma approximation Rec. 709
-    // https://en.wikipedia.org/wiki/Luma_%28video%29
-    float gray = 0.2126f * px.r + 0.7152f * px.g + 0.0722f * px.b;
-
-    // Normalize to [0,1]
-    float gray_norm = gray / color_depth;
-    gray_norm = fminf(1.0f, fmaxf(0.0f, gray_norm));
+    // Normalize each channel to the range [0..1]
+    float red_norm   = normalize01((float)px.r, color_depth);
+    float green_norm = normalize01((float)px.g, color_depth);
+    float blue_norm  = normalize01((float)px.b, color_depth);
 
     // Convert to linear light from sRGB
     // (sRGB values are not linearly spaced, which messes with the quantization)
-    float gray_norm_linear = srgb_to_linear(gray_norm);
+    float red_norm_linear   = srgb_to_linear(red_norm);
+    float green_norm_linear = srgb_to_linear(green_norm);
+    float blue_norm_linear  = srgb_to_linear(blue_norm);
+
+    // Luma approximation Rec. 709
+    // https://en.wikipedia.org/wiki/Luma_%28video%29
+    float gray_norm_linear = 0.2126f * red_norm_linear
+                           + 0.7152f * green_norm_linear
+                           + 0.0722f * blue_norm_linear;
+
+    gray_norm_linear = clamp01(gray_norm_linear);
     
     float v = gray_norm_linear * (levels - 1);  // v is the linear light scaled to the quantized levels
     int base = (int)v;                          // v is almost certainly between two levels, the base is the lower quantization level
