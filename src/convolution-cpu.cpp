@@ -1,5 +1,9 @@
-#include "img-utils.cuh"
+#include "img.hpp"
 #include <algorithm>
+#include <cstdio>
+#include <string>
+#define FILTER_SIZE 3
+#define FILTER_RADIUS 1
 
 void convolve_image_CPU(const PPMPixel* src, PPMPixel* dst, int w, int h, int color_depth,
                         const float filter[FILTER_SIZE][FILTER_SIZE]) {
@@ -28,11 +32,7 @@ void convolve_image_CPU(const PPMPixel* src, PPMPixel* dst, int w, int h, int co
   }
 }
 
-// --- CPU convolution runner (bypasses CUDA) ---
-#include "img.hpp"
-#include <cstdio>
-#include <string>
-
+// This duplicate code is here to avoid depending on any cuda files for the cpu only code
 static void init_box_filter(float filter[FILTER_SIZE][FILTER_SIZE]) {
   const float val = 1.0f / (float)(FILTER_SIZE * FILTER_SIZE);
   for (int i = 0; i < FILTER_SIZE; ++i) {
