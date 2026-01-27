@@ -7,7 +7,9 @@ enum class ShaderType{
   BLUR_MOTION,
   BLUR_SOBEL,
   DITHER,
-  GRAYSCALE
+  GRAYSCALE,
+  INVERSION,
+  MIRROR
 };
 
 // Kernel runner (defined in setup.cu)
