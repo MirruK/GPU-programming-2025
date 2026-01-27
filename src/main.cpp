@@ -21,13 +21,27 @@ int main(int argc, char** argv) {
             shader = ShaderType::GRAYSCALE;
         } else if (strcmp(argv[1], "sobel") == 0) {
             shader = ShaderType::BLUR_SOBEL;
+        } else if (strcmp(argv[1], "invert") == 0 || strcmp(argv[1], "inversion") == 0) {
+            shader = ShaderType::INVERSION;
+        } else if (strcmp(argv[1], "mirror") == 0) {
+            shader = ShaderType::MIRROR;
+        } else if (strcmp(argv[1], "cpu-convolution") == 0) {
+            // CPU-only path, bypass CUDA setup; handled below.
+            // Optional second arg is output filename.
+            if(argc == 3) {
+                outfile = std::string(argv[2]);
+            }
+            // Run CPU convolution directly and exit.
+            extern void run_cpu_convolution(std::string outfile);
+            run_cpu_convolution(outfile);
+            return 0;
         } else {
-            printf("Unknown shader '%s'. Use: box | gauss | motion | dither | grayscale | sobel\n", argv[1]);
+            printf("Unknown shader '%s'. Use: box | gauss | motion | dither | grayscale | sobel | inversion | mirror | cpu-convolution\n", argv[1]);
             return 1;
         }
     } else {
         printf("No shader type given, defaulting to 'box'.\n");
-        printf("Usage: %s [box|gauss|motion|dither|grayscale|sobel] < input.ppm\n", argv[0]);
+        printf("Usage: %s [box|gauss|motion|dither|grayscale|sobel|inversion|mirror|cpu-convolution] < input.ppm\n", argv[0]);
     }
     if(argc == 3) {
         outfile = std::string(argv[2]);

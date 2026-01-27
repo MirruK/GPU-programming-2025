@@ -39,6 +39,10 @@ void dispatch_blur_kernel(ShaderType shader_type, PPMPixel* px_in_d, PPMPixel* p
   blur_image_GPU(px_in_d, px_out_d, w, h, color_depth);
 }
 
+// Forward declarations for new kernels implemented in separate .cu files.
+void invert_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth);
+void mirror_image_horizontal_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h);
+
 
 void run_kernel(std::string outfile, ShaderType shader_type){
   printf("Running kernel test\n");
@@ -82,6 +86,14 @@ void run_kernel(std::string outfile, ShaderType shader_type){
       // Optional opacity mask not yet wired; pass nullptr for full effect
       float* mask = nullptr;
       grayscale_image_GPU(px_in_d, px_out_d, mask, w, h, color_depth);
+    }
+    break;
+  case ShaderType::INVERSION: {
+      invert_image_GPU(px_in_d, px_out_d, w, h, color_depth);
+    }
+    break;
+  case ShaderType::MIRROR: {
+      mirror_image_horizontal_GPU(px_in_d, px_out_d, w, h);
     }
     break;
   case ShaderType::BLUR_SOBEL:
