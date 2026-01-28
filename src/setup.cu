@@ -103,7 +103,7 @@ void run_kernel(std::string infile, std::string outfile, ShaderType shader_type)
       mirror_image_horizontal_GPU(px_in_d, px_out_d, w, h);
     }
     break;
-  case ShaderType::BLUR_SOBEL:
+  case ShaderType::BLUR_SOBEL: {
     PPMPixel* grayscale_d;
     float* gx_d;
     float* gy_d;
@@ -111,13 +111,12 @@ void run_kernel(std::string infile, std::string outfile, ShaderType shader_type)
     cudaMalloc((void**)&gx_d, w*h*sizeof(float));
     cudaMalloc((void**)&gy_d, w*h*sizeof(float));
 
-    cudaError_t cuda_error = cudaDeviceSynchronize();
-    if (cuda_error != cudaSuccess) {
-      printf("Error when running SOBEL kernel: %s\n", cudaGetErrorString(cuda_error));
-    }
     sobel_image_GPU(px_in_d, px_out_d, grayscale_d, gx_d, gy_d, w, h, color_depth);
 
     cudaFree(grayscale_d);
+    cudaFree(gx_d);
+    cudaFree(gy_d);
+    }
     break;
   }
 
