@@ -8,4 +8,4 @@ enum GradientDirection : int {
     BOTTOM_TO_TOP = 3
 };
 
-void generate_gradient_mask(float* mask_d, int w, int h, GradientDirection dir);
+void generate_gradient_mask_GPU(float* mask_d, int w, int h, GradientDirection dir);

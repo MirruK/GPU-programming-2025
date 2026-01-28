@@ -42,5 +42,4 @@ void grayscale_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h,
     dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
 
     grayscale_kernel<<<blocks, threads>>>(src_img_d, dst_img_d, w, h, color_depth);
-
 }

@@ -36,7 +36,7 @@ __global__ void gradient_mask_kernel(float* mask_d, int w, int h, GradientDirect
 
 inline int int_div_rnd_up(int a, int b) { return (a % b != 0) ? (a / b + 1) : (a / b); }
 
-void generate_gradient_mask(float* mask_d, int w, int h, GradientDirection dir)
+void generate_gradient_mask_GPU(float* mask_d, int w, int h, GradientDirection dir)
 {
     dim3 threads(20, 20);
     dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));

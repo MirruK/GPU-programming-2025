@@ -119,6 +119,8 @@ void run_kernel(std::string infile, std::string outfile, ShaderType shader_type)
     break;
   }
 
+  apply_mask_GPU(px_in_d, px_out_d, nullptr, w, h, color_depth);
+
   cudaError_t cuda_error = cudaDeviceSynchronize();
   if (cuda_error != cudaSuccess) {
     printf("Error when running kernel: %s\n", cudaGetErrorString(cuda_error));

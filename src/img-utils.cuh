@@ -9,12 +9,26 @@ cudaError_t set_blur_filter(const float h_filter[FILTER_SIZE][FILTER_SIZE]);
 
 void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth);
 
-void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* grayscale_d, float* gx_d, float* gy_d, int w, int h, int color_depth);
+void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d,
+                     PPMPixel* grayscale_d,
+                     float* gx_d, float* gy_d,
+                     int w, int h,
+                     int color_depth);
 
 void select_blur_filter(ShaderType type);
 
 void grayscale_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth);
-void grayscale_dither_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth, int levels);
+
+void grayscale_dither_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d,
+                                int w, int h,
+                                int color_depth,
+                                int levels);
+
+void apply_mask_GPU(const PPMPixel* base_img_d, PPMPixel* shaded_img_d,
+                    const float* mask_d,
+                    int w, int h,
+                    int color_depth);
+
 
 __host__ __device__
 inline uint16_t clamping_add(uint16_t v1, uint16_t v2, uint16_t color_depth) {
@@ -81,22 +95,22 @@ __device__ __forceinline__ int denormalize(float norm_srgb_val, int color_depth)
 
 
 __device__ __forceinline__ PPMPixel apply_opacity_mask(PPMPixel base_px,
-                                                       PPMPixel effect_px,
+                                                       PPMPixel shaded_px,
                                                        float alpha,
                                                        int color_depth)
 {
     alpha = clamp01(alpha);
     if (alpha <= 0.0f) return base_px;
-    if (alpha >= 1.0f) return effect_px;
+    if (alpha >= 1.0f) return shaded_px;
 
     // Normalze both pixels to [0..1]
     float base_r_norm = normalize01((float)base_px.r, color_depth);
     float base_g_norm = normalize01((float)base_px.g, color_depth);
     float base_b_norm = normalize01((float)base_px.b, color_depth);
 
-    float fx_r_norm = normalize01((float)effect_px.r, color_depth);
-    float fx_g_norm = normalize01((float)effect_px.g, color_depth);
-    float fx_b_norm = normalize01((float)effect_px.b, color_depth);
+    float fx_r_norm = normalize01((float)shaded_px.r, color_depth);
+    float fx_g_norm = normalize01((float)shaded_px.g, color_depth);
+    float fx_b_norm = normalize01((float)shaded_px.b, color_depth);
 
     // Convert to linear light from sRGB
     float base_r_lin = srgb_to_linear(base_r_norm);
