@@ -44,12 +44,19 @@ void invert_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, in
 void mirror_image_horizontal_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h);
 
 
-void run_kernel(std::string outfile, ShaderType shader_type){
+void run_kernel(std::string infile, std::string outfile, ShaderType shader_type){
   printf("Running kernel test\n");
-  FILE* in_fp = stdin;
+
+  FILE* in_fp = fopen(infile.c_str(), "rb");
+  if (!in_fp) {
+    printf("Failed to open input file '%s'\n", infile.c_str());
+    return;
+  }
+
   // Allocate image on host
   auto img = PPMImage::from_file(in_fp);
   fclose(in_fp);
+
   int w = img.width;
   int h = img.height;
   int color_depth = img.color_depth;

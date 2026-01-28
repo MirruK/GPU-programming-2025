@@ -53,8 +53,13 @@ static void write_outfile(const std::string &outfile, PPMImage &out_img){
   fclose(out);
 }
 
-void run_cpu_convolution(std::string outfile) {
-  FILE* in_fp = stdin;
+void run_cpu_convolution(std::string infile, std::string outfile) {
+  FILE* in_fp = fopen(infile.c_str(), "rb");
+  if (!in_fp) {
+    printf("Failed to open input file '%s'\n", infile.c_str());
+    return;
+  }
+
   auto img = PPMImage::from_file(in_fp);
   fclose(in_fp);
 

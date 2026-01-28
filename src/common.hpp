@@ -13,4 +13,4 @@ enum class ShaderType{
 };
 
 // Kernel runner (defined in setup.cu)
-void run_kernel(std::string outfile, ShaderType shader_type);
+void run_kernel(std::string infile, std::string outfile, ShaderType shader_type);
