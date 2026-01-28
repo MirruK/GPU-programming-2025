@@ -352,7 +352,7 @@ void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int 
 void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* grayscale_d, float* gx_d, float* gy_d, int w, int h, int color_depth) {
     
     grayscale_image_GPU(src_img_d, grayscale_d, w, h, color_depth);
-    cudaDeviceSynchronize(); //wait for grayscale to finish
+    //cudaDeviceSynchronize(); //wait for grayscale to finish
 
     // same as blur filter had
     dim3 TiledBlocks(BLOCK_SIZE, BLOCK_SIZE); 
@@ -363,12 +363,12 @@ void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* graysca
    // x filter
     init_sobel_x_filter();
     convolution_tiled_raw_kernel<<<TiledGrid, TiledBlocks>>>(grayscale_d, gx_d, w, h);
-    cudaDeviceSynchronize();
+    cudaDeviceSynchronize(); //stops from overwriting filter before done
     
     // y filter
     init_sobel_y_filter();
     convolution_tiled_raw_kernel<<<TiledGrid, TiledBlocks>>>(grayscale_d, gy_d, w, h);
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
    
     // Combine gradients
 
