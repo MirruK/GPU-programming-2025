@@ -13,7 +13,7 @@ void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* graysca
 
 void select_blur_filter(ShaderType type);
 
-void grayscale_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, float* mask, int w, int h, int color_depth);
+void grayscale_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth);
 void grayscale_dither_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth, int levels);
 
 __host__ __device__

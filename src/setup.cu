@@ -91,8 +91,7 @@ void run_kernel(std::string infile, std::string outfile, ShaderType shader_type)
     break;
   case ShaderType::GRAYSCALE: {
       // Optional opacity mask not yet wired; pass nullptr for full effect
-      float* mask = nullptr;
-      grayscale_image_GPU(px_in_d, px_out_d, mask, w, h, color_depth);
+      grayscale_image_GPU(px_in_d, px_out_d, w, h, color_depth);
     }
     break;
   case ShaderType::INVERSION: {
