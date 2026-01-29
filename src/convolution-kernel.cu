@@ -122,6 +122,48 @@ __global__ void convolution_raw_kernel(PPMPixel* img_d, float* out_d,  int w, in
   out_d[row * w + col] = sum;
 }
 
+
+// version of convolution_tiled_rgb_u16
+__global__ void convolution_tiled_raw_kernel(PPMPixel* img_d, float* out_d,int w, int h){
+  int tx = threadIdx.x; // 0..BLOCK_SIZE-1
+  int ty = threadIdx.y; // 0..BLOCK_SIZE-1
+
+  // Output pixel coords
+  int row_o = blockIdx.y * TILE_SIZE + ty;
+  int col_o = blockIdx.x * TILE_SIZE + tx;
+
+  // Input coords for shared tile
+  int row_i = row_o - R;
+  int col_i = col_o - R;
+
+  __shared__ float tile[BLOCK_SIZE][BLOCK_SIZE];
+
+  // Load one shared element per thread
+  if (row_i >= 0 && row_i < h && col_i >= 0 && col_i < w) {
+    tile[ty][tx] = (float)img_d[row_i * w + col_i].r;
+  } else {
+    tile[ty][tx] = 0.0f;
+  }
+
+  __syncthreads();
+
+   if (ty < TILE_SIZE && tx < TILE_SIZE && row_o < h && col_o < w) {
+    float sum = 0.0f;
+
+    #pragma unroll
+    for (int i = 0; i < FILTER_SIZE; i++) {
+      #pragma unroll
+      for (int j = 0; j < FILTER_SIZE; j++) {
+        sum += tile[ty + i][tx + j] * filter[i][j];
+       
+      }
+    }
+
+    out_d[row_o * w + col_o] = sum;
+}
+}
+
+
 __global__ void sobel_magnitude_kernel(
     float* gx_d,
     float* gy_d,
@@ -286,7 +328,8 @@ void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int 
 // sobel explained https://www.youtube.com/watch?v=uihBwtPIBxM
 
 // TODO sobel orienation color coded?
-void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* grayscale_d, float* gx_d, float* gy_d, int w, int h, int color_depth) {
+
+/* void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* grayscale_d, float* gx_d, float* gy_d, int w, int h, int color_depth) {
     dim3 threads(20,20);
     dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
     
@@ -304,4 +347,33 @@ void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* graysca
     // Combine gradients
     sobel_magnitude_kernel<<<blocks, threads>>>(gx_d, gy_d, dst_img_d, w, h, color_depth);
     
-  }
+  } */
+
+void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* grayscale_d, float* gx_d, float* gy_d, int w, int h, int color_depth) {
+    
+    grayscale_image_GPU(src_img_d, grayscale_d, w, h, color_depth);
+    //cudaDeviceSynchronize(); //wait for grayscale to finish
+
+    // same as blur filter had
+    dim3 TiledBlocks(BLOCK_SIZE, BLOCK_SIZE); 
+    dim3 TiledGrid((w + TILE_SIZE - 1) / TILE_SIZE,
+                   (h + TILE_SIZE - 1) / TILE_SIZE);
+
+  
+   // x filter
+    init_sobel_x_filter();
+    convolution_tiled_raw_kernel<<<TiledGrid, TiledBlocks>>>(grayscale_d, gx_d, w, h);
+    cudaDeviceSynchronize(); //stops from overwriting filter before done
+    
+    // y filter
+    init_sobel_y_filter();
+    convolution_tiled_raw_kernel<<<TiledGrid, TiledBlocks>>>(grayscale_d, gy_d, w, h);
+    //cudaDeviceSynchronize();
+   
+    // Combine gradients
+
+    // magic number 32
+    dim3 threads(32, 32);
+    dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
+    sobel_magnitude_kernel<<<blocks, threads>>>(gx_d, gy_d, dst_img_d, w, h, color_depth);
+}
