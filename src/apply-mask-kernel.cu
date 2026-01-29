@@ -33,7 +33,6 @@ void apply_mask_GPU(const PPMPixel* base_img_d,
 {
     dim3 threads(20, 20);
     dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
-    printf("Test\n");
 
     apply_mask_kernel<<<blocks, threads>>>(base_img_d, shaded_img_d, mask_d, w, h, color_depth);
 }

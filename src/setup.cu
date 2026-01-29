@@ -1,8 +1,10 @@
 #include <cstdio>
 #include <string>
+#include <cuda_runtime.h>
 #include "common.hpp"
 #include "img.hpp"
 #include "img-utils.cuh"
+#include "mask-generators/mask-utils.cuh"
 
 void init_blur_filter(float filter[FILTER_SIZE][FILTER_SIZE]) {
   for(int i = 0; i < FILTER_SIZE; i++) {
@@ -43,8 +45,37 @@ void dispatch_blur_kernel(ShaderType shader_type, PPMPixel* px_in_d, PPMPixel* p
 void invert_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth);
 void mirror_image_horizontal_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h);
 
+static float* make_mask_d(const MaskSpec& mask, int w, int h) {
+    if (mask.type == MaskType::NONE) return nullptr;
 
-void run_kernel(std::string infile, std::string outfile, ShaderType shader_type){
+    float* mask_d = nullptr;
+    cudaMalloc((void**)&mask_d, w * h * sizeof(float));
+
+    switch (mask.type) {
+        case MaskType::GRADIENT:
+            generate_gradient_mask_GPU(mask_d, w, h, LEFT_TO_RIGHT);
+            break;
+
+        case MaskType::RADIAL:
+            generate_radial_mask_GPU(mask_d, w, h, 60, 100);
+            break;
+
+        case MaskType::PPM:
+            printf("PPM mask not implemented yet: %s\n", mask.source.c_str());
+            cudaFree(mask_d);
+            return nullptr;
+
+        case MaskType::NONE:
+        default:
+            cudaFree(mask_d);
+            return nullptr;
+    }
+
+    return mask_d;
+}
+
+
+void run_kernel(std::string infile, std::string outfile, ShaderType shader_type, MaskSpec mask_spec){
   printf("Running kernel test\n");
 
   FILE* in_fp = fopen(infile.c_str(), "rb");
@@ -119,7 +150,8 @@ void run_kernel(std::string infile, std::string outfile, ShaderType shader_type)
     break;
   }
 
-  apply_mask_GPU(px_in_d, px_out_d, nullptr, w, h, color_depth);
+  float* mask_d = make_mask_d(mask_spec, w, h);
+  apply_mask_GPU(px_in_d, px_out_d, mask_d, w, h, color_depth);
 
   cudaError_t cuda_error = cudaDeviceSynchronize();
   if (cuda_error != cudaSuccess) {
@@ -133,4 +165,5 @@ void run_kernel(std::string infile, std::string outfile, ShaderType shader_type)
   // free device memory
   cudaFree(px_in_d);
   cudaFree(px_out_d);
+  if (mask_d) cudaFree(mask_d);
 }

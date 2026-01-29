@@ -6,9 +6,9 @@
 
 int main(int argc, char** argv) {
     if (argc < 4) {
-        printf("Usage: %s <input.ppm> <output.ppm> <shader>\n", argv[0]);
+        printf("Usage: %s <input.ppm> <output.ppm> <shader> [mask]\n", argv[0]);
         printf("Valid shader names are:\n");
-        printf("[box|gauss|motion|dither|grayscale|sobel|inversion|mirror|cpu-convolution]\n");
+        printf("[ box | gauss | motion |dither | grayscale | sobel | inversion | mirror | cpu-convolution ]\n");
         return 1;
     }
 
@@ -40,10 +40,30 @@ int main(int argc, char** argv) {
         run_cpu_convolution(infile, outfile);
         return 0;
     } else {
-        printf("Unknown shader '%s'. Use: box | gauss | motion | dither | grayscale | sobel | inversion | mirror | cpu-convolution\n", argv[3]);
+        printf("Unknown shader '%s'. Valid shader names are:\n", argv[3]);
+        printf("[ box | gauss | motion | dither |grayscale | sobel | inversion | mirror | cpu-convolution ]\n");
         return 1;
     }
 
-    run_kernel(infile, outfile, shader);
+    MaskSpec mask;
+
+    if (argc >= 5) {
+        std::string m = argv[4];
+        if (m.size() >= 4 && m.substr(m.size() - 4) == ".ppm") {
+            mask.type = MaskType::PPM;
+            mask.path = m;
+        } else if (m == "gradient") {
+            mask.type = MaskType::GRADIENT;
+        } else if (m == "radial") {
+            mask.type = MaskType::RADIAL;
+        } else if (m == "none") {
+            mask.type = MaskType::NONE;
+        } else {
+            printf("Unknown mask '%s'. Valid masks are: [ none | gradient | radial | <file>.ppm ]\n", m.c_str());
+            return 1;
+        }
+    }
+
+    run_kernel(infile, outfile, shader, mask);
     return 0;
 }

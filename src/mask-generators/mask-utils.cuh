@@ -9,3 +9,4 @@ enum GradientDirection : int {
 };
 
 void generate_gradient_mask_GPU(float* mask_d, int w, int h, GradientDirection dir);
+void generate_radial_mask_GPU(float* mask_d, int w, int h, int inner_percent, int outer_percent);
