@@ -37,7 +37,8 @@ Use the Makefile provided by running: `make all`
 
 This builds the binary, you can then run it using:
 `./main INPUT_FILENAME.ppm OUTPUT_FILENAME.ppm shader (mask)`
-The output is written to either the specified OUTPUT_FILENAME.ppm
+
+The output is written to the specified OUTPUT_FILENAME.ppm
 
 
 The outputs will be placed either in the output directory specified by the -d flag,
