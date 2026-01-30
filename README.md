@@ -1,4 +1,5 @@
 # Project for GPU programming 2025
+
 ## Various shader effects implemented in CUDA
 
 ## Project description
@@ -16,20 +17,7 @@
   - Writing output file (this should be done somewhere else ideally)
 - convolution-kernel.cu
   - The most unoptimized convolution kernel implementation
-  - Right now uses a FILTER_SIZE*FILTER_SIZE blur filter
-
-### TODO: Review this architecture and implement
-
-1. Parse cmd-args
-2. create or read input image(s)
-3. Prepare input / output variables
-4. Allocate memory
-5. Memcpy input contents to GPU
-6. Run the correct shader kernel on the GPU
-7. Collect the result in host memory
-8. Repeat from step 2. for all images
-9. Write output image(s) to disk
-10. cleanup
+  - Right now uses a FILTER_SIZE\*FILTER_SIZE blur filter
 
 ## How to run
 
