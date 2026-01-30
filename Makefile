@@ -15,7 +15,16 @@ TARGET = $(BUILD_DIR)/main
 # Source files
 SRCS = src/main.cpp src/img.cpp src/convolution-cpu.cpp
 HEADERS = src/img.hpp
-CU_SRCS = src/setup.cu src/convolution-kernel.cu src/grayscale-kernel.cu src/grayscale-dither-kernel.cu src/mask-generators/gradient-mask-generator.cu src/inversion-kernel.cu src/mirror-kernel.cu
+CU_SRCS = \
+    src/setup.cu \
+    src/convolution-kernel.cu \
+    src/grayscale-kernel.cu \
+    src/grayscale-dither-kernel.cu \
+    src/mask-generators/gradient-mask-generator.cu \
+    src/apply-mask-kernel.cu \
+    src/inversion-kernel.cu \
+    src/mirror-kernel.cu \
+    src/mask-generators/radial-mask-generator.cu
 
 # Object files
 OBJS := $(addprefix $(BUILD_DIR)/, $(SRCS:.cpp=.o))
