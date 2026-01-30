@@ -39,7 +39,3 @@ This builds the binary, you can then run it using:
 `./main INPUT_FILENAME.ppm OUTPUT_FILENAME.ppm shader (mask)`
 
 The output is written to the specified OUTPUT_FILENAME.ppm
-
-
-The outputs will be placed either in the output directory specified by the -d flag,
-or into the current directory with the filenames of the outupts in the format output-NNN.ppm
