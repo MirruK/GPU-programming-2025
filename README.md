@@ -36,13 +36,9 @@
 Use the Makefile provided by running: `make all`
 
 This builds the binary, you can then run it using:
-`cat INPUT_FILENAME.ppm | ./build/main [box | gauss | motion] [OUTPUT_FILENAME.ppm]`
+`./main INPUT_FILENAME.ppm OUTPUT_FILENAME.ppm shader (mask)`
+The output is written to either the specified OUTPUT_FILENAME.ppm
 
-The output is written to either the specified OUTFILE_NAME.ppm, or output.ppm if nothing else is provided.
-
-
-
-TODO: Is this how we want it? `./main -s SHADER_NAME -f FILENAME... -d DIRNAME`
 
 The outputs will be placed either in the output directory specified by the -d flag,
 or into the current directory with the filenames of the outupts in the format output-NNN.ppm
