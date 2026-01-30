@@ -21,7 +21,7 @@ __global__ void inversion_kernel(PPMPixel* img_d, PPMPixel* img_out_d, int w, in
 inline int int_div_rnd_up(int a, int b) { return (a % b != 0) ? (a / b + 1) : (a / b); }
 
 void invert_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth) {
-    dim3 threads(20, 20);
+    dim3 threads(16, 16);
     dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
 
     inversion_kernel<<<blocks, threads>>>(src_img_d, dst_img_d, w, h, color_depth);

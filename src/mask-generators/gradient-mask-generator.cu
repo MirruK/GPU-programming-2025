@@ -38,7 +38,7 @@ inline int int_div_rnd_up(int a, int b) { return (a % b != 0) ? (a / b + 1) : (a
 
 void generate_gradient_mask_GPU(float* mask_d, int w, int h, GradientDirection dir)
 {
-    dim3 threads(20, 20);
+    dim3 threads(16, 16);
     dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
     gradient_mask_kernel<<<blocks, threads>>>(mask_d, w, h, dir);
 }

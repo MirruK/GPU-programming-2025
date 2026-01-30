@@ -320,7 +320,7 @@ void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int 
 }
 
 //void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int color_depth) {
-//  dim3 threads(20,20);
+//  dim3 threads(16, 16);
 //  dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
 //
 //  convolution_kernel<<<blocks, threads>>>(src_img_d, dst_img_d, w, h, color_depth);
@@ -330,7 +330,7 @@ void blur_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, int w, int h, int 
 // TODO sobel orienation color coded?
 
 /* void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* grayscale_d, float* gx_d, float* gy_d, int w, int h, int color_depth) {
-    dim3 threads(20,20);
+    dim3 threads(16, 16);
     dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
     
     // make grayscale first
@@ -373,7 +373,7 @@ void sobel_image_GPU(PPMPixel* src_img_d, PPMPixel* dst_img_d, PPMPixel* graysca
     // Combine gradients
 
     // magic number 32
-    dim3 threads(32, 32);
+    dim3 threads(16, 16);
     dim3 blocks(int_div_rnd_up(w, threads.x), int_div_rnd_up(h, threads.y));
     sobel_magnitude_kernel<<<blocks, threads>>>(gx_d, gy_d, dst_img_d, w, h, color_depth);
 }
