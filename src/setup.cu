@@ -53,15 +53,15 @@ static float* make_mask_d(const MaskSpec& mask, int w, int h) {
 
     switch (mask.type) {
         case MaskType::GRADIENT:
-            generate_gradient_mask_GPU(mask_d, w, h, LEFT_TO_RIGHT);
+            generate_gradient_mask_GPU(mask_d, w, h, mask.gradient_dir);
             break;
 
         case MaskType::RADIAL:
-            generate_radial_mask_GPU(mask_d, w, h, 60, 100);
+            generate_radial_mask_GPU(mask_d, w, h, mask.radial_inner, mask.radial_outer);
             break;
 
         case MaskType::PPM:
-            printf("PPM mask not implemented yet: %s\n", mask.source.c_str());
+            printf("PPM mask not implemented yet: %s\n", mask.path.c_str());
             cudaFree(mask_d);
             return nullptr;
 
@@ -75,7 +75,7 @@ static float* make_mask_d(const MaskSpec& mask, int w, int h) {
 }
 
 
-void run_kernel(std::string infile, std::string outfile, ShaderType shader_type, MaskSpec mask_spec){
+void run_kernel(std::string infile, std::string outfile, ShaderSpec shader_spec, MaskSpec mask_spec){
   printf("Running kernel test\n");
 
   FILE* in_fp = fopen(infile.c_str(), "rb");
@@ -109,14 +109,14 @@ void run_kernel(std::string infile, std::string outfile, ShaderType shader_type,
   cudaMemcpy(px_in_d, in_pixels_h, w * h * sizeof(PPMPixel), cudaMemcpyHostToDevice);
 
   //Dispatch the correct kernel
-  switch (shader_type) {
+  switch (shader_spec.type) {
   case ShaderType::BLUR_BOX:
   case ShaderType::BLUR_GAUSSIAN:
-  case ShaderType::BLUR_MOTION: dispatch_blur_kernel(shader_type, px_in_d, px_out_d, w, h, color_depth);
+  case ShaderType::BLUR_MOTION: dispatch_blur_kernel(shader_spec.type, px_in_d, px_out_d, w, h, color_depth);
     break;
   case ShaderType::DITHER: {
       // Placeholder levels value; will be made configurable later
-      int levels = 4;
+      int levels = shader_spec.dither_levels;
       grayscale_dither_image_GPU(px_in_d, px_out_d, w, h, color_depth, levels);
     }
     break;

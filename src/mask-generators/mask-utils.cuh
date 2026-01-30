@@ -1,12 +1,6 @@
 #pragma once
 #include <cuda_runtime.h>
-
-enum GradientDirection : int {
-    LEFT_TO_RIGHT = 0,
-    RIGHT_TO_LEFT = 1,
-    TOP_TO_BOTTOM = 2,
-    BOTTOM_TO_TOP = 3
-};
+#include "../common.hpp" // For the GradientDirection definition
 
 void generate_gradient_mask_GPU(float* mask_d, int w, int h, GradientDirection dir);
 void generate_radial_mask_GPU(float* mask_d, int w, int h, int inner_percent, int outer_percent);

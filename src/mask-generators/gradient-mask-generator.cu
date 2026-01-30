@@ -13,19 +13,19 @@ __global__ void gradient_mask_kernel(float* mask_d, int w, int h, GradientDirect
     float t = 0.0f;
 
     switch (dir) {
-        case LEFT_TO_RIGHT:
+        case GradientDirection::LEFT_TO_RIGHT:
             t = (w > 1) ? (float)col / (float)(w - 1) : 0.0f;
             break;
 
-        case RIGHT_TO_LEFT:
+        case GradientDirection::RIGHT_TO_LEFT:
             t = (w > 1) ? 1.0f - ((float)col / (float)(w - 1)) : 0.0f;
             break;
 
-        case TOP_TO_BOTTOM:
+        case GradientDirection::TOP_TO_BOTTOM:
             t = (h > 1) ? (float)row / (float)(h - 1) : 0.0f;
             break;
 
-        case BOTTOM_TO_TOP: // Fall-through: BOTTOM_TO_TOP is also the default case.
+        case GradientDirection::BOTTOM_TO_TOP: // Fall-through: BOTTOM_TO_TOP is also the default case.
         default:
             t = (h > 1) ? 1.0f - ((float)row / (float)(h - 1)) : 0.0f;
             break;
